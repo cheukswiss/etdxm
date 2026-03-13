@@ -1,0 +1,5 @@
+# 审计日志（运行时生成，不提交）
+.claude/audit.log
+
+# 本地设置（个人权限配置）
+.claude/settings.local.json
