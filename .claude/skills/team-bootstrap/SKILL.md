@@ -1,7 +1,6 @@
 ---
 name: team-bootstrap
 description: 首次创建 Teammate 的引导流程——太子首次协作或尚书首次派发六部时加载，完成 Team 创建与分层启动
-disable-model-invocation: true
 ---
 
 # Skill: 会话引导（Team Bootstrap）
@@ -62,9 +61,9 @@ disable-model-invocation: true
 1. **读取团队配置**：`Read ~/.claude/teams/sansheng-liubu/config.json`
 2. **检查 members 数组**：是否已有同名成员（`name` 字段匹配）
 3. **若已存在**：
-   - 向该 Teammate 发送一条 SendMessage 探活（如"状态确认"）
-   - 若收到回复 → **复用**，不重复创建
-   - 若无回复 → 记录为疑似失活，**仍不创建新实例**（避免系统追加 `-2` 后缀导致寻址失效）
+   - 向该 Teammate 发送一条 SendMessage 探活（如"状态确认"），**探活超时阈值：30 秒**
+   - 30 秒内收到回复 → **复用**，不重复创建
+   - 30 秒内无回复 → 标记为**疑似失活**，**仍不创建新实例**（避免系统追加 `-2` 后缀导致寻址失效），上报太子决定是否清理重建
 4. **若不存在** → 正常创建
 
 > **已知限制**：Claude Code 无法区分 idle 与 terminated Teammate（[Issue #29271](https://github.com/anthropics/claude-code/issues/29271)）。探活是当前唯一可用手段。
@@ -145,3 +144,11 @@ disable-model-invocation: true
 - **第一阶段（太子自查）**：不需要创建 Teammate，太子独立完成
 - **第二阶段（联络三省）**：须先确保三省 Teammate 已创建，否则先执行本 Skill 的第一层创建
 - **第三阶段（联络六部）**：仅在有活跃任务的部门已有 Teammate 时才联络，否则由太子根据 Task API 记录代为汇总
+
+## Shutdown 超时处理
+
+太子发送 `shutdown_request` 后须等待 `shutdown_response`（协议层已支持 approve/reject）。
+
+- 30 秒内收到 `shutdown_response { approve: true }` → 确认关闭，更新 config 状态
+- 30 秒内无 `shutdown_response` → 标记该 Teammate 为**疑似失活**（与探活超时处置一致），不视为"关闭成功"
+- 后续若需再创建同角色 Teammate，仍须执行防重检查流程
