@@ -1,8 +1,6 @@
 ---
 name: tuichao
 description: 优雅结束会话——逐级收集状态、shutdown 所有 Teammate、生成会话总结后退朝
-user-invocable: true
-disable-model-invocation: true
 ---
 
 # Skill: 退朝
@@ -75,6 +73,16 @@ disable-model-invocation: true
     太子对遗留事项的处置建议（下次会话优先处理等）
 ```
 
+### 第三·五阶段：写入起居注
+
+太子将本次会话关键事件写入起居注：
+
+1. 在 `.claude/qijuzhu/YYYY-MM-DD.md`（今日日期）追加本次会话记录
+2. 记录内容参照 `qijuzhu` Skill 的格式规范（见 qijuzhu-format.md）
+3. 若文件不存在则新建；若已存在则追加新段落
+
+> 详细格式见 `.claude/skills/qijuzhu/qijuzhu-format.md`
+
 ### 第四阶段：收尾
 
 - 太子呈上退朝奏报
@@ -87,3 +95,4 @@ disable-model-invocation: true
 3. 六部拒绝 shutdown 时，尚书省不得强制关闭，需记录原因报告太子
 4. 退朝奏报格式固定，不得省略任何章节（无内容写"无"）
 5. 六部 shutdown 必须经尚书省中转，太子不得直接向六部发送 shutdown_request
+6. 退朝前须写入起居注，确保跨会话历史可追溯
