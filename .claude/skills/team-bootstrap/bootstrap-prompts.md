@@ -19,6 +19,7 @@ usage: "由太子在创建三省或六部 Teammate 时构造 prompt 时读取"
 **关键参数**：
 - `team_name`：必须与 TeamCreate 时的 team_name 一致
 - `name`：必须与 architecture-overview 角色总览中的 agent_id 一致（SendMessage 按 name 寻址）
+- ⚠️ **`name` 必须使用英文（ASCII）**：Claude Code 已知 Bug，含中文的 Teammate name 会导致通信失败。所有 name 必须为英文或拼音，禁止中文。✅ `zhongshu` `gongbu-2` ❌ `中书省`
 
 ## 第二层：六部 Prompt 注入说明
 

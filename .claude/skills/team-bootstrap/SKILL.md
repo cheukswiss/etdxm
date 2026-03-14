@@ -39,6 +39,14 @@ description: 首次创建 Teammate 的引导流程——太子首次协作或尚
 - **门下省**：审议与覆奏，不执行任务
 - **尚书省**：派发协调汇总，不亲自动手
 
+## Teammate 命名约束
+
+> ⚠️ **Claude Code 已知 Bug**：Teammate `name` 含中文字符时，Agent 间通信（SendMessage）会静默失败。
+>
+> **规则：所有 Teammate 的 `name` 参数必须使用英文或拼音（ASCII），禁止使用中文。**
+> - ✅ 合法：`zhongshu` `menxia` `shangshu` `gongbu` `worker-1`
+> - ❌ 禁止：`中书省` `工部` `员外郎1`
+
 ## 防重检查流程
 
 创建任何 Teammate 前，**必须**执行以下检查：
