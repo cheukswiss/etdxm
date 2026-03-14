@@ -1,3 +1,16 @@
+## [2026-03-14] — 编年史·立制纪
+
+### 📜 新旨意
+- 立编年史 Skill——扫描 git log 按三省六部语境自动归档变更 (`a7e045f`)
+- 立起居注制——会话事件记录，追踪跨会话历史，tuichao 写入，morning-court 读取 (`1bfb121`)
+- 立三省六部一键安装脚本——`install.sh` / `uninstall.sh`，支持 `--minimal`/`--full`/`--dry-run`/`--force` 诸制
+
+### 🔧 修缮
+- 行三层渐进披露之制——6 个 Skill 升级 L2+L3，19 个维持两层，governance-core 整体加载 (`45f6282`)
+- 修缮安装脚本——修复 sed 注入、settings.json 静默覆盖、Skill 复制吞错诸缺陷
+
+---
+
 ## [2026-03-13] — 编年史·开国纪
 
 ### 📜 新旨意
