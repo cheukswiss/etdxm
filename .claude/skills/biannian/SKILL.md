@@ -1,8 +1,6 @@
 ---
 name: biannian
 description: 扫描自上次 tag 以来的 git log，按三省六部语境归类变更，输出结构化 CHANGELOG 条目
-user-invocable: true
-disable-model-invocation: true
 ---
 
 # Skill: 编年
