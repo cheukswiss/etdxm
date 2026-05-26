@@ -40,4 +40,30 @@ TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 echo "$TIMESTAMP | $TOOL_NAME | $DETAIL" >> "$LOG_FILE" 2>/dev/null || true
 
+# ---- 可观测性：结构化指标 + Token 估算 + 预算累计 ----
+# token 为按调用字节数估算的「下界代理值」（INPUT 已被 head -c 截断，故为下界）——
+# 用于相对趋势与失控调用量检测，非精确计费。详见 HARNESS.md。
+SESSION_ID=$(cat "$LOG_DIR/session.id" 2>/dev/null || echo "default")
+TOKENS_EST=$(( ${#INPUT} / 4 ))
+SAFE_DETAIL=$(printf '%s' "$DETAIL" | tr '\n' ' ')
+jq -nc --arg ts "$TIMESTAMP" --arg session "$SESSION_ID" --arg tool "$TOOL_NAME" --argjson tokens "$TOKENS_EST" --arg detail "$SAFE_DETAIL" \
+  '{ts:$ts,session:$session,event:"tool_call",tool:$tool,tokens_est:$tokens,detail:$detail}' \
+  >> "$LOG_DIR/metrics.jsonl" 2>/dev/null || true
+
+BUDGET_FILE="$LOG_DIR/budget.json"
+if [[ -f "$BUDGET_FILE" ]]; then
+  (
+    flock -w 2 9 2>/dev/null || exit 0
+    CUR=$(jq -r '.cumulative_tokens // 0' "$BUDGET_FILE" 2>/dev/null || echo 0)
+    case "$CUR" in *[!0-9]*) CUR=0 ;; esac
+    NEW=$(( CUR + TOKENS_EST ))
+    TMP=$(mktemp 2>/dev/null) || exit 0
+    if jq --argjson n "$NEW" '.cumulative_tokens=$n' "$BUDGET_FILE" > "$TMP" 2>/dev/null; then
+      mv "$TMP" "$BUDGET_FILE" 2>/dev/null || rm -f "$TMP"
+    else
+      rm -f "$TMP"
+    fi
+  ) 9>"$BUDGET_FILE.lock" 2>/dev/null || true
+fi
+
 exit 0

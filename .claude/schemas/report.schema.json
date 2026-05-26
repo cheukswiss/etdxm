@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "etdxm/report.schema.json",
+  "title": "回奏报告",
+  "description": "尚书省回奏皇上的报告。闭环验收增强：status=delivered 时必须逐条验收 acceptance_criteria（pass + evidence）。运行时强制实现见 .claude/hooks/lib/validate-payload.sh",
+  "type": "object",
+  "required": ["report"],
+  "properties": {
+    "report": {
+      "type": "object",
+      "required": ["plan_id", "status", "subtask_results"],
+      "properties": {
+        "plan_id": { "type": "string" },
+        "title": { "type": "string" },
+        "status": {
+          "type": "string",
+          "enum": ["delivered", "partial", "failed", "rejected"]
+        },
+        "summary": { "type": "string" },
+        "subtask_results": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["task_id", "department", "status"],
+            "properties": {
+              "task_id": { "type": "string" },
+              "department": { "type": "string" },
+              "status": { "type": "string" },
+              "output": { "type": "string" }
+            }
+          }
+        },
+        "criteria_verification": {
+          "type": "array",
+          "description": "逐条验收。status=delivered 时必填且每条 result 必须为 pass，并附 evidence",
+          "items": {
+            "type": "object",
+            "required": ["criterion", "result", "evidence"],
+            "properties": {
+              "criterion": { "type": "string" },
+              "result": { "type": "string", "enum": ["pass", "fail"] },
+              "evidence": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "issues": { "type": "array" },
+        "recommendations": { "type": "string" }
+      }
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "status": "pending_agent_teams_support",
+  "note": "【清单 #8 异质模型】Agent Teams 当前不支持 per-teammate 模型指定，下列映射为期望配置（非生效配置）。一旦上游开放该能力，由 team-bootstrap 在创建 Teammate 时读取本文件注入对应模型。目的：让审查角色（门下/刑部）与规划者（中书）使用更强模型，从根上缓解『同模型多 agent 互相赞同』——使封驳/覆奏获得真正的独立审视价值。",
+  "rationale": {
+    "reviewers_strong": "门下(menxia)、刑部(xingbu)、中书(zhongshu) 用最强模型，承担独立审视与规划",
+    "dispatch_cheap": "太子(taizi) 仅做意图分拣与中转，用快而省的模型",
+    "workers_default": "尚书与六部执行层用均衡模型"
+  },
+  "routing": {
+    "taizi": "claude-haiku-4-5",
+    "zhongshu": "claude-opus-4-7",
+    "menxia": "claude-opus-4-7",
+    "xingbu": "claude-opus-4-7",
+    "shangshu": "claude-sonnet-4-6",
+    "gongbu": "claude-sonnet-4-6",
+    "hubu": "claude-sonnet-4-6",
+    "bingbu": "claude-sonnet-4-6",
+    "libu": "claude-sonnet-4-6",
+    "libu_hr": "claude-sonnet-4-6",
+    "_default": "claude-sonnet-4-6"
+  }
+}

@@ -1,5 +1,14 @@
-# 审计日志（运行时生成，不提交）
+# 审计日志与运行时产物（运行时生成，不提交）
 .claude/audit.log
+.claude/metrics.jsonl
+.claude/budget.json
+.claude/budget.json.lock
+.claude/session.id
+eval/.run-mark
+eval/results/*.json
+
+# 待应用的 settings 提案（应用后即删，勿提交）
+.claude/settings.json.proposed
 
 # 本地设置（个人权限配置）
 .claude/settings.local.json

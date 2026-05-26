@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "etdxm/ticket.schema.json",
+  "title": "任务工单",
+  "description": "尚书省派发至六部的标准工单。canonical 规约，运行时强制实现见 .claude/hooks/lib/validate-payload.sh",
+  "type": "object",
+  "required": ["task"],
+  "properties": {
+    "task": {
+      "type": "object",
+      "required": ["id", "title", "assigned_to", "status", "acceptance_criteria"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^TASK-" },
+        "title": { "type": "string", "minLength": 1 },
+        "priority": { "type": "string", "enum": ["P0", "P1", "P2", "P3"] },
+        "source": { "type": "string" },
+        "plan_id": { "type": "string" },
+        "assigned_to": {
+          "type": "string",
+          "enum": ["gongbu", "xingbu", "hubu", "bingbu", "libu", "libu_hr"]
+        },
+        "depends_on": { "type": "array", "items": { "type": "string" } },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "acceptance_criteria": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "assigned", "in_progress", "blocked", "done", "auditing", "rejected", "partial_done"]
+        },
+        "deliverables": { "type": "array", "items": { "type": "string" } },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}

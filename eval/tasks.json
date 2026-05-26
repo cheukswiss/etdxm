@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "description": "etdxm 评测任务集——跨复杂度分层的真实任务，用于度量完整流转的 token 成本与产出质量，并对比单 Agent 基线。配合 .claude/scripts/metrics-report.sh 与 eval/run-eval.sh 使用。",
+  "tiers": {
+    "fast_track": "单部门、影响 ≤ 3 文件、无安全/合规风险、非生产变更",
+    "standard": "完整三省流转 + 单部门执行",
+    "complex": "完整流转 + 多部门并行 + 覆奏"
+  },
+  "tasks": [
+    { "id": "FT-01", "tier": "fast_track", "prompt": "把 README.md 中的版本号 v1.2 改为 v1.3", "expect": ["单文件修改", "走 fast_track 而非全流程"] },
+    { "id": "FT-02", "tier": "fast_track", "prompt": "在 .gitignore 中追加 *.tmp 忽略规则", "expect": ["单文件", "太子直办或 fast_track"] },
+    { "id": "FT-03", "tier": "fast_track", "prompt": "修正 docs/operations.md 中一处拼写错误", "expect": ["单文件", "无需中书规划"] },
+    { "id": "FT-04", "tier": "fast_track", "prompt": "给某工具函数补一行注释说明参数含义", "expect": ["单文件", "fast_track"] },
+    { "id": "ST-01", "tier": "standard", "prompt": "为登录接口增加请求频率限制（rate limit）", "expect": ["中书草案", "门下审议", "工部执行", "刑部审查", "门下覆奏"] },
+    { "id": "ST-02", "tier": "standard", "prompt": "把现有同步文件读取改造为异步并补单测", "expect": ["完整三省流转", "单部门(工部)", "测试覆盖"] },
+    { "id": "ST-03", "tier": "standard", "prompt": "为用户表新增 last_login 字段并写迁移脚本", "expect": ["户部执行", "迁移可回滚", "覆奏验收"] },
+    { "id": "ST-04", "tier": "standard", "prompt": "把项目错误响应统一为标准 API 信封格式", "expect": ["中书拆解", "工部执行", "刑部审查"] },
+    { "id": "CX-01", "tier": "complex", "prompt": "实现一个带 JWT 鉴权的用户模块：接口 + 数据表 + 测试 + 文档", "expect": ["多部门并行(工部/户部/礼部/刑部)", "parallel_group 标注", "覆奏逐条验收"] },
+    { "id": "CX-02", "tier": "complex", "prompt": "把单体服务的支付逻辑拆分为独立模块并接入 CI", "expect": ["多部门(工部/兵部)", "封驳可能触发", "覆奏"] },
+    { "id": "CX-03", "tier": "complex", "prompt": "为系统引入审计日志：埋点 + 存储 + 查询接口 + 权限控制", "expect": ["多部门并行", "门下安全审议", "覆奏验收"] },
+    { "id": "CX-04", "tier": "complex", "prompt": "重构配置加载层，支持多环境 + 校验 + 文档，并保证零停机迁移", "expect": ["多部门", "高封驳概率", "完整覆奏"] }
+  ]
+}
