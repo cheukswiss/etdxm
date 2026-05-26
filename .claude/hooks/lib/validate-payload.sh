@@ -27,6 +27,10 @@ case "$TYPE" in
     chk '.task' || fail "缺少 task 对象"
     chk '.task.id and .task.title and .task.assigned_to and .task.status and (.task.acceptance_criteria != null)' \
       || fail "task 必填字段缺失（id/title/assigned_to/status/acceptance_criteria）"
+    # 收紧（治本·同惠 H08/H10）：title 不可为空字符串。jq 的 `and .task.title` 对 "" 判真会漏过。
+    # 已正式纳入 — 太子 2026-05-26 裁准；xingbu M-A3R 复测确认零误拒（无 .task 的真实扁平流量
+    # 不进 validate-payload、report/plan 不受连带、仅拒本应拒的空 title 工单）。
+    chk '((.task.title // "") | tostring | length) > 0' || fail "title 不可为空（length 须 > 0）"
     chk '(.task.acceptance_criteria | type) == "array"' || fail "acceptance_criteria 必须为数组"
     echo "$JSON" | jq -e --argjson r "$ROLES" '.task.assigned_to as $a | ($r | index($a)) != null' >/dev/null 2>&1 \
       || fail "assigned_to 非法部门：$(echo "$JSON" | jq -r '.task.assigned_to')"

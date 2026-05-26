@@ -40,6 +40,16 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": "TaskCreate",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/H10-ticket-adapter.sh",
+            "timeout": 10
+          }
+        ]
       }
     ],
     "PostToolUse": [
