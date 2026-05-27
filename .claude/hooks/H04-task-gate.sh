@@ -10,9 +10,9 @@ INPUT=$(cat)
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
 LOG_FILE="$PROJECT_DIR/.claude/audit.log"
 
-# M2 修复：jq 提取补 `2>/dev/null || <安全默认>`，对齐 H03/H08/H09 风格。
-# 否则畸形/空输入时 jq 退出码(常为2)经 set -e 透传，会在写审计/度量前
-# 意外中止并误判为封驳。补守护后：畸形输入走既有「主题为空→封驳」确定路径并先落日志。
+# jq 提取均补 `2>/dev/null || <安全默认>`：否则畸形/空输入时 jq 非零退出码经
+# set -e 透传，会在写审计/度量前意外中止并误判为封驳；补守护后畸形输入走
+# 既有「主题为空→封驳」确定路径并先落日志。
 TASK_ID=$(echo "$INPUT" | jq -r '.task_id // "unknown"' 2>/dev/null || echo "unknown")
 TASK_SUBJECT=$(echo "$INPUT" | jq -r '.task_subject // ""' 2>/dev/null || echo "")
 TEAMMATE=$(echo "$INPUT" | jq -r '.teammate_name // "unknown"' 2>/dev/null || echo "unknown")

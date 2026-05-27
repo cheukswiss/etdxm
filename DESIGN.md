@@ -431,6 +431,7 @@ Agent Teams 的 SendMessage 技术上全通达（任意 Teammate 可向任意目
 | 太子 | 中书省 | 传旨（常规）|
 | 太子 | 门下省、尚书省 | 仅限早朝流程询问状态 |
 | 中书省 | 门下省 | 提交草案审议 |
+| 中书省 | 太子 | 方案协调/请示（如需直达内廷时）|
 | 门下省 | 中书省 | 封驳退回 |
 | 门下省 | 尚书省 | 准奏通过、覆奏结果 |
 | 门下省 | 太子 | 三驳上奏 |
@@ -467,8 +468,8 @@ Agent Teams 的 SendMessage 技术上全通达（任意 Teammate 可向任意目
 | R06 | 输入校验 | 所有外部输入必须校验与消毒，拒绝信任外部数据 |
 | R07 | 错误处理 | 禁止向用户暴露内部错误栈，生产环境关闭调试模式 |
 | R08 | HTTPS | 生产环境所有通信必须加密传输 |
-| R09 | 越权代办 | 禁止代替其他 Teammate 执行其职责范围内的操作（如太子直接写代码、工部代写测试）。**豁免**：降级策略（第十二章）触发时的临时职责代行与上级亲办（F2/F3 处置）不受此限，但须事后由门下省补审 |
-| R10 | 跨级通信 | 禁止违反通信权限矩阵发送消息（如六部直接联系太子/三省/其他六部，P0 紧急除外） |
+| R09 | 越权代办 | Agent 不得执行超出自身职责范围的任务（如太子直接开发、六部自行规划）。豁免：降级与上级亲办场景除外，须事后补审（降级策略与 F2/F3 处置详见第十二章） |
+| R10 | 跨级通信 | 违反通信权限矩阵的通信行为（如六部绕过尚书省直接联系三省/皇上，P0 紧急除外） |
 
 **违反红线的后果**：刑部直接打回产出物至对应产出部门，标记 `rejected`，必须修复后重新提交。
 
@@ -534,60 +535,15 @@ Agent Teams 的 SendMessage 技术上全通达（任意 Teammate 可向任意目
 
 ### 9.2 工单格式
 
-所有正式任务必须使用标准工单格式流转：
+所有正式任务必须使用标准工单格式流转：工单含 `task.{id, title, priority, source, plan_id, assigned_to, depends_on, acceptance_criteria, status, deliverables, notes}` 等字段，并标注子任务状态（见 4.2）。
 
-```json
-{
-  "task": {
-    "id": "TASK-20260312-001",
-    "title": "实现用户登录接口",
-    "priority": "P1",
-    "source": "旨意原文摘要",
-    "plan_id": "PLAN-20260312-001",
-    "assigned_to": "gongbu",
-    "depends_on": [],
-    "acceptance_criteria": [
-      "JWT Token 正确签发",
-      "错误返回统一格式",
-      "单元测试覆盖率 > 80%"
-    ],
-    "status": "assigned",
-    "deliverables": [],
-    "notes": ""
-  }
-}
-```
+> 完整工单结构与字段规约以 Skill `ticket-format` 及 `.claude/schemas/ticket.schema.json`（canonical）为准。
 
 ### 9.3 回奏格式
 
-尚书省向皇上回奏时，必须包含以下信息：
+尚书省向皇上回奏时，必须使用标准回奏格式，含 `report.{plan_id, title, status, summary, subtask_results[], issues, recommendations}` 等字段；`status=delivered` 时须附验收闭环证据。
 
-```json
-{
-  "report": {
-    "plan_id": "PLAN-20260312-001",
-    "title": "用户登录模块开发",
-    "status": "delivered",
-    "summary": "简要执行结果描述",
-    "subtask_results": [
-      {
-        "task_id": "TASK-001",
-        "department": "gongbu",
-        "status": "done",
-        "output": "src/auth/login.ts"
-      },
-      {
-        "task_id": "TASK-002",
-        "department": "xingbu",
-        "status": "done",
-        "output": "tests/auth/login.test.ts"
-      }
-    ],
-    "issues": [],
-    "recommendations": ""
-  }
-}
-```
+> 完整回奏结构与字段规约以 Skill `report-format` 及 `.claude/schemas/report.schema.json`（canonical）为准。
 
 ---
 

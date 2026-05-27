@@ -157,7 +157,7 @@ run_cmd "✓ .claude/hooks/"   'mkdir -p "$TARGET_DIR/.claude/hooks"'
 run_cmd "✓ .claude/skills/"  'mkdir -p "$TARGET_DIR/.claude/skills"'
 run_cmd "✓ .claude/qijuzhu/" 'mkdir -p "$TARGET_DIR/.claude/qijuzhu"'
 
-# H2: 生成 .gitkeep 确保空目录可被 Git 追踪
+# 生成 .gitkeep 确保空目录可被 Git 追踪
 if ! $DRY_RUN; then
     touch "$TARGET_DIR/.claude/qijuzhu/.gitkeep" 2>/dev/null || true
 fi
@@ -183,7 +183,7 @@ for skill_dir in "$SOURCE_DIR"/.claude/skills/*/; do
         continue
     fi
 
-    # D3: 使用 nullglob，不静默吞错
+    # 使用 nullglob，不静默吞错
     md_files=("$skill_dir"*.md)
     if [[ ${#md_files[@]} -eq 0 ]]; then
         echo -e "      ${YELLOW}⚠ $skill_name/ 无 .md 文件，跳过${NC}"
@@ -208,7 +208,7 @@ fi
 echo -e "${CYAN}[4/6] 安装配置文件...${NC}"
 
 if [[ -f "$TARGET_DIR/.claude/settings.json" ]]; then
-    # D2: 检测已有 hooks，提供合并/覆盖/跳过选择
+    # 检测已有 hooks，提供合并/覆盖/跳过选择
     existing_has_hooks=false
     if command -v jq &>/dev/null && jq -e '.hooks' "$TARGET_DIR/.claude/settings.json" &>/dev/null; then
         existing_has_hooks=true

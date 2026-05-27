@@ -20,12 +20,25 @@ Skill 目录结构：每个 Skill 位于 `.claude/skills/<skill-name>/` 下，`S
 
 ```yaml
 ---
-name: skill-name           # Skill 唯一标识
-description: 一句话描述      # 用途说明
-disable-model-invocation: true/false  # 是否禁止模型自动调用
-user-invocable: true/false  # 是否允许用户通过 /skill-name 手动调用
+name: skill-name           # Skill 唯一标识（必填）
+description: 一句话描述      # 用途说明，供判断是否加载（必填）
 ---
 ```
+
+`name` 与 `description` 两字段为所有 Skill 必填。
+
+仅**皇上指令类** Skill（当前为 `keju` / `morning-court` / `shengzhi` / `tuichao` 四个）额外声明以下两字段，使其可由用户经 `/skill-name` 手动调用、且禁止模型自动触发：
+
+```yaml
+---
+name: morning-court
+description: 一句话描述
+user-invocable: true            # 允许用户经 /skill-name 手动调用
+disable-model-invocation: true  # 禁止模型自动调用
+---
+```
+
+> 普通 Skill 无需声明这两字段，模型按 `description` 自动判断加载。请勿把这两字段当作通用约定。
 
 ### Agent 角色优化
 

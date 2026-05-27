@@ -13,8 +13,8 @@ LOG_FILE="$LOG_DIR/audit.log"
 # 确保审计日志目录存在
 mkdir -p "$LOG_DIR"
 
-# M2 修复：jq 提取补守护，对齐 H03/H08/H09，免畸形/空输入经 set -e 透传，
-# 在写 session.id/budget.json 前意外中止（致 H09 预算 fail-open）。
+# jq 提取均补守护：免畸形/空输入经 set -e 透传，在写 session.id/budget.json
+# 前意外中止（致 H09 预算 fail-open）。
 SOURCE=$(echo "$INPUT" | jq -r '.source // "unknown"' 2>/dev/null || echo "unknown")
 MODEL=$(echo "$INPUT" | jq -r '.model // "unknown"' 2>/dev/null || echo "unknown")
 SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // "unknown"' 2>/dev/null || echo "unknown")
@@ -29,10 +29,9 @@ echo "$TIMESTAMP | SESSION_START | source=$SOURCE | model=$MODEL | session=$SESS
 echo "$SESSION_ID" > "$LOG_DIR/session.id" 2>/dev/null || true
 LIMIT="${GOVERNANCE_TOKEN_BUDGET:-400000}"
 case "$LIMIT" in *[!0-9]*) LIMIT=400000 ;; esac
-# M1 修复：仅在「真新会话」才把累计预算清零（cumulative_tokens=0）——
-#   budget.json 不存在，或既有 session_id 与当前不一致。
-# resume/compact 属同一会话（session_id 不变），保留既有 budget.json 与累计，
-# 否则 H09 熔断会被无谓清零、对最该保护的长会话失效。
+# 仅在「真新会话」才把累计预算清零（cumulative_tokens=0）——budget.json 不存在，
+#   或既有 session_id 与当前不一致。resume/compact 属同一会话（session_id 不变），
+# 保留既有 budget.json 与累计，否则 H09 熔断会被无谓清零、对最该保护的长会话失效。
 BUDGET_FILE="$LOG_DIR/budget.json"
 PREV_SID=$(jq -r '.session_id // empty' "$BUDGET_FILE" 2>/dev/null || echo "")
 if [[ ! -f "$BUDGET_FILE" || "$PREV_SID" != "$SESSION_ID" ]]; then

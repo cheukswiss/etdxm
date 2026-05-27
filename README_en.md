@@ -58,8 +58,9 @@ The Tang Dynasty's Three Departments and Six Ministries system solved analogous 
 - **Complete multi-agent governance pipeline**: 10 Agents across a three-tier architecture (Inner Court → Three Departments → Six Ministries), covering the full chain from planning to execution to review
 - **Built-in quality assurance**: Veto (Menxia review and rejection) + Re-review (dual post-execution verification) — both proposals and deliverables get independent scrutiny
 - **Parallel execution**: Non-conflicting tasks run simultaneously across ministries; within a ministry, Director-Deputy mode supports up to 3 Deputies working in parallel in isolated worktrees
-- **24 on-demand Skills**: Like sealed imperial decrees — summoned when needed, filed away after use — zero context waste
-- **7 automated governance Hooks**: File protection, dangerous command interception, operation audit — a permanent inspector general, ready out of the box
+- **26 Skills (25 on-demand + always-resident governance-core)**: Like sealed imperial decrees — summoned when needed, filed away after use — zero context waste
+- **10 automated governance Hooks**: File protection, dangerous command interception, operation audit, message gateway, budget circuit breaker, work-order validation — a permanent inspector general, ready out of the box
+- **Runtime enforcement layer (schema validation + budget breaker)**: Communication topology and three schema types (work order / report / proposal) are enforced at runtime; a session exceeding its token budget trips the circuit breaker automatically — persuasion hardened into law
 - **Fault tolerance and circuit breaking**: Timeout retry, failure reassignment, consecutive failures trigger breaker — timeout means dismissal, crash means replacement
 - **Morning court system**: `/morning-court` to gather system status and pending tasks in one command, presenting a court report
 - **Zero code, zero infrastructure, copy and use**: Drop the files into your project directory, start Claude Code, and begin governance
@@ -75,10 +76,14 @@ The Tang Dynasty's Three Departments and Six Ministries system solved analogous 
 ```
 your-project/
 ├── CLAUDE.md          ← System declaration, auto-loaded by Claude Code
+├── eval/              ← Evaluation tasks & baseline (cost/quality verification)
 └── .claude/
-    ├── settings.json  ← Hooks registration + environment variables
-    ├── hooks/         ← 7 governance Hook scripts
-    └── skills/        ← 24 Skill modules (loaded on demand)
+    ├── settings.json  ← Hooks registration + env vars (ENFORCE switch, token budget)
+    ├── HARNESS.md     ← Enforcement layer authoritative reference
+    ├── hooks/         ← 10 governance Hook scripts (incl. lib/validate-payload.sh)
+    ├── schemas/       ← Work order / report / proposal JSON Schemas (canonical)
+    ├── scripts/       ← Ops scripts (metrics-report.sh, etc.)
+    └── skills/        ← 26 Skill modules (25 on-demand + resident governance-core)
 ```
 
 **Step 2** — Customize configuration in `CLAUDE.md` as needed
@@ -109,14 +114,19 @@ Or add to `.claude/settings.json`:
 ```json
 {
   "env": {
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
+    "GOVERNANCE_ENFORCE": "1",
+    "GOVERNANCE_TOKEN_BUDGET": "400000"
   }
 }
 ```
 
+- `GOVERNANCE_ENFORCE`: `1` for hard-block mode (violations exit 2), `0` for observe-and-warn only. Affects H04 delivery checks, H08 message gateway, H09 budget breaker, H10 work-order adapter.
+- `GOVERNANCE_TOKEN_BUDGET`: per-session token budget ceiling (estimated basis), used by H09 budget breaker.
+
 ### 📦 System Dependencies
 
-Hook scripts (H01-H03) use `jq` to parse JSON input. Please ensure it is installed:
+All Hook scripts (H01–H10) and `lib/validate-payload.sh` use `jq` to parse JSON input. Please ensure it is installed:
 
 ```bash
 # macOS
@@ -129,7 +139,29 @@ sudo apt-get install jq
 sudo pacman -S jq
 ```
 
-> If jq is not installed, Hook scripts will silently degrade (audit logs may record as "unknown") without blocking normal usage.
+> **jq is a hard dependency and must be installed.** Audit-class Hooks (e.g. H03) silently degrade when jq is missing (logs record as "unknown") without blocking; but schema-validation Hooks (H08 message gateway, H10 work-order adapter) rely on jq for structural checks, and without jq they cannot enforce governance correctly. Install it.
+
+---
+
+## 🔐 Enforcement Layer Overview — Persuasion Hardened into Law
+
+> *The first generation relied on Skill docs being followed voluntarily; the second generation hardens the three disciplines (communication · budget · acceptance) into runtime law.*
+
+On top of the first-generation "Hooks + Skills" governance, this project ships a **runtime enforcement layer** that turns collaboration discipline — previously enforced only by documentation — into executable, circuit-breakable hard rules:
+
+| Component | Location | Responsibility |
+|-----------|----------|----------------|
+| Three Schemas | `.claude/schemas/{ticket,report,plan}.schema.json` | Canonical field specs for work order / report / proposal |
+| Payload validator | `.claude/hooks/lib/validate-payload.sh` | jq runtime enforcement of the three schemas (zero external deps), called by H08/H10 |
+| Message gateway H08 | `.claude/hooks/H08-message-gateway.sh` | Validates communication topology + three schema types before SendMessage |
+| Budget breaker H09 | `.claude/hooks/H09-budget-guard.sh` | Before team creation / messaging: token cumulative ≥80% warns, ≥100% exit 2 trips breaker |
+| Work-order adapter H10 | `.claude/hooks/H10-ticket-adapter.sh` | Validates work-order schema on TaskCreate |
+| ENFORCE switch | `GOVERNANCE_ENFORCE` | `1` hard-block / `0` observe-and-warn only |
+| Budget ceiling | `GOVERNANCE_TOKEN_BUDGET` | Per-session token budget, used by H09 |
+| Eval baseline | `eval/` (tasks, baseline, `run-eval.sh`) | Cost and quality verification |
+| Observability artifacts | `.claude/metrics.jsonl`, `.claude/scripts/metrics-report.sh` | Runtime metrics collection and reporting |
+
+> The design rationale, switch semantics, observability basis, and honest caveats of the enforcement layer are authoritatively documented in **`.claude/HARNESS.md`** — details are not repeated here.
 
 ---
 
@@ -295,9 +327,9 @@ What does this function do?                     # Classified as chat → direct 
 
 ## 📜 Skill Modules
 
-> *Twenty-four sealed decrees — summoned on demand, filed after use, claiming not a single seat in court.*
+> *Sealed decrees — summoned on demand, filed after use, claiming not a single seat in court.*
 
-24 Skills loaded on demand, released after use, no context overhead:
+26 Skills total — 25 loaded on demand, released after use, no context overhead (the resident governance-core is loaded at session init and not listed here):
 
 | Category | Skill | Trigger |
 |----------|-------|---------|
@@ -306,6 +338,7 @@ What does this function do?                     # Classified as chat → direct 
 | | `tuichao` | `/tuichao` — adjourn court, graceful shutdown |
 | | `keju` | `/keju` — imperial exam, system health check |
 | | `biannian` | `/biannian` — annals, generate CHANGELOG |
+| | `qijuzhu` | Court diary: records court proceedings during morning court / adjournment |
 | Crown Prince | `intent-classification` | Crown Prince classifies message intent |
 | | `team-bootstrap` | First-time Teammate creation guidance |
 | | `zouzhe` | Crown Prince presents formal memorial to Emperor |
@@ -330,21 +363,26 @@ What does this function do?                     # Classified as chat → direct 
 
 ## 🛡️ Hooks Governance Layer
 
-> *The Inspector General stands permanent watch — seven checkpoints, silent guardians.*
+> *The Inspector General stands permanent watch — ten checkpoints, silent guardians.*
 
-7 Hook scripts (`.claude/hooks/`) provide automated governance:
+10 Hook scripts (`.claude/hooks/`) provide automated governance:
 
-| Hook | Event | Function |
-|------|-------|----------|
-| H01 Governance File Protection | PreToolUse | Prevent modification of core governance files — touch the throne, face impeachment |
-| H02 Dangerous Command Interception | PreToolUse | Block `rm -rf` and other high-risk commands — stay the executioner's blade |
-| H03 Operation Audit Log | PostToolUse | Log all tool invocations — the court diary, every action recorded |
-| H04 Task Completion Verification | TaskCompleted | Verify delivery conditions |
-| H05 Idle Quality Gate | TeammateIdle | Workspace check before going idle |
-| H06 Config Change Sentinel | ConfigChange | Block unauthorized config changes |
-| H07 Session Lifecycle | SessionStart | Initialize audit environment |
+| Hook | Event / matcher | Function |
+|------|-----------------|----------|
+| H01 Governance File Protection | PreToolUse `Edit\|Write` | Matches protected list (governance-core/SKILL.md, settings.json) → exit 2 veto — touch the throne, face impeachment |
+| H02 Dangerous Command Interception | PreToolUse `Bash` | Block `rm -rf /`, `DROP`, bare DELETE/UPDATE without WHERE, and other high-risk commands — stay the executioner's blade |
+| H03 Operation Audit Log | PostToolUse | Log all tool invocations to audit.log + metrics.jsonl, and accumulate byte-estimated tokens into budget.json (non-blocking) — the court diary, every action recorded |
+| H04 Task Completion Verification | TaskCompleted | Verify non-empty subject, non-empty deliverables, no merge conflict; otherwise exit 2 |
+| H05 Idle Quality Gate | TeammateIdle | Unstaged files >10 before going idle → exit 2 prompts confirmation |
+| H06 Config Change Sentinel | ConfigChange | project_settings change → exit 2 block; skills audited and allowed |
+| H07 Session Lifecycle | SessionStart | Initialize session.id and budget.json; only a genuinely new session resets cumulative budget (resume/compact preserved) |
+| H08 Message Gateway | PreToolUse `SendMessage` | Before messaging, validate communication topology + ticket/report/plan schemas (via lib/validate-payload.sh) |
+| H09 Budget Breaker | PreToolUse `Agent\|SendMessage` | Before team creation / messaging: token cumulative ≥80% warns / ≥100% → exit 2 trips breaker |
+| H10 Work-order Adapter | PreToolUse `TaskCreate` | Validate ticket schema on task creation; without work-order metadata, log dead_letter and allow |
 
-All audit logs are written to `.claude/audit.log` (included in `.gitignore`).
+> H04 (deliverables), H08, H09, H10 are governed by the `GOVERNANCE_ENFORCE` switch: `1` hard-block, `0` observe-and-warn only.
+
+Runtime artifacts (all in `.gitignore`, not committed): audit log `.claude/audit.log`, runtime metrics `.claude/metrics.jsonl`, budget accumulation `.claude/budget.json`(`.lock`), session identifier `.claude/session.id`.
 
 ---
 
